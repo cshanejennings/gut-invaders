@@ -13,8 +13,9 @@ const PLAYER_SIZE = 64;
 const BULLET_SIZE = 5;
 const BULLET_SPEED = 7;
 const PLAYER_SPEED = 5;
-const PLAYER_FIRE_FRAME_DURATION = 50;
+const PLAYER_FIRE_FRAME_DURATION = 250 / 4;
 const PLAYER_SPRITE_SIZE = 64;
+const FIRING_SEQUENCE = [1, 2, 3, 0];
 
 export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
   const player = useRef<Player>({
@@ -24,6 +25,7 @@ export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
     height: PLAYER_SIZE,
     frame: 0,
     row: 0,
+    mode: 0,
     nextFrameTime: 0,
     firing: false,
     firingStep: 0,
@@ -35,6 +37,7 @@ export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
     update(keys: React.MutableRefObject<Keys>, canvasWidth: number) {
       const p = player.current;
       const now = performance.now();
+      p.row = p.mode;
       if (keys.current.left && p.x > 0) p.x -= PLAYER_SPEED;
       if (keys.current.right && p.x < canvasWidth - p.width) p.x += PLAYER_SPEED;
 
@@ -47,8 +50,8 @@ export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
         });
         if (!p.firing) {
           p.firing = true;
-          p.row = 1;
-          p.frame = 0;
+          p.row = p.mode;
+          p.frame = FIRING_SEQUENCE[0];
           p.firingStep = 0;
           p.nextFrameTime = now + PLAYER_FIRE_FRAME_DURATION;
         }
@@ -60,13 +63,12 @@ export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
         .filter((b) => b.y > 0);
 
       if (p.firing && now >= p.nextFrameTime) {
-        p.frame = (p.frame + 1) % 4;
         p.firingStep += 1;
-        if (p.firingStep >= 4) {
+        if (p.firingStep >= FIRING_SEQUENCE.length) {
           p.firing = false;
-          p.row = 0;
           p.frame = 0;
         } else {
+          p.frame = FIRING_SEQUENCE[p.firingStep];
           p.nextFrameTime = now + PLAYER_FIRE_FRAME_DURATION;
         }
       }
@@ -101,6 +103,7 @@ export const Capsule = forwardRef<CapsuleHandles>((_, ref) => {
       player.current.y = y;
       player.current.frame = 0;
       player.current.row = 0;
+      player.current.mode = 0;
       player.current.firing = false;
       player.current.firingStep = 0;
       player.current.nextFrameTime = 0;

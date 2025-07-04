@@ -28,6 +28,8 @@ export interface Player extends Entity {
   frame: number;
   /** sprite sheet row used for current animation */
   row: number;
+  /** selected sprite sheet row set by game mode */
+  mode: number;
   /** timestamp when the next frame should be shown */
   nextFrameTime: number;
   /** true if the firing animation is active */
