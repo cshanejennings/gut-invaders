@@ -12,7 +12,8 @@ import { Entity, Enemy } from "./types";
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const PLAYER_SIZE = 40;
-const ENEMY_SIZE = 75;
+// Each alien sprite frame is 48x48, so draw and collide at the same size
+const ENEMY_SIZE = 48;
 const BULLET_SIZE = 5;
 const BULLET_SPEED = 7;
 const PLAYER_SPEED = 5;
