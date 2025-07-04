@@ -7,11 +7,11 @@ import { GameOverOverlay } from "./components/GameOverOverlay";
 import { useKeyboardControls } from "./hooks/useKeyboardControls";
 import { generateEnemies } from "./utils/enemyFormation";
 import { isColliding } from "./utils/collision";
-import { Entity, Enemy } from "./types";
+import { Entity, Enemy, Player } from "./types";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const PLAYER_SIZE = 40;
+const PLAYER_SIZE = 64;
 // Each alien sprite frame is 48x48, so draw and collide at the same size
 const ENEMY_SIZE = 48;
 const BULLET_SIZE = 5;
@@ -21,6 +21,8 @@ const ENEMY_SPEED_INITIAL = 2;
 const ENEMY_SPEED_INCREMENT = 0.5;
 
 const SPRITE_SIZE = 48;
+const PLAYER_SPRITE_SIZE = 64;
+const PLAYER_FIRE_FRAME_DURATION = 50; // 250ms over 5 frames
 const SPAWN_FRAME_DURATION = 100; // 500ms over 5 frames
 const NORMAL_FRAME_DURATION = 200; // 5 fps
 const HIT_FRAME_DURATION = 60; // 300ms over 5 frames
@@ -40,11 +42,16 @@ const App: React.FC = () => {
 
   const score = useRef(0);
 
-  const player = useRef<Entity>({
+  const player = useRef<Player>({
     x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2,
     y: CANVAS_HEIGHT - 60,
     width: PLAYER_SIZE,
     height: PLAYER_SIZE,
+    frame: 0,
+    row: 0,
+    nextFrameTime: 0,
+    firing: false,
+    firingStep: 0,
   });
 
   useEffect(() => {
@@ -56,10 +63,18 @@ const App: React.FC = () => {
 
     const invaderImage = new Image();
     invaderImage.src = "/assets/alien-sprite.png";
+
+    const playerImage = new Image();
+    playerImage.src = "/assets/capsule-sprite.png";
+
     let imageLoaded = false;
-    invaderImage.onload = () => {
-      imageLoaded = true;
+    let loaded = 0;
+    const handleLoad = () => {
+      loaded += 1;
+      if (loaded === 2) imageLoaded = true;
     };
+    invaderImage.onload = handleLoad;
+    playerImage.onload = handleLoad;
 
     let frameId: number;
 
@@ -80,6 +95,13 @@ const App: React.FC = () => {
           width: BULLET_SIZE,
           height: BULLET_SIZE,
         });
+        if (!p.firing) {
+          p.firing = true;
+          p.row = 1;
+          p.frame = 0;
+          p.firingStep = 0;
+          p.nextFrameTime = now + PLAYER_FIRE_FRAME_DURATION;
+        }
         keys.current.space = false;
       }
 
@@ -87,6 +109,19 @@ const App: React.FC = () => {
       bullets.current = bullets.current
         .map((b) => ({ ...b, y: b.y - BULLET_SPEED }))
         .filter((b) => b.y > 0);
+
+      // Update player firing animation
+      if (p.firing && now >= p.nextFrameTime) {
+        p.frame = (p.frame + 1) % 4;
+        p.firingStep += 1;
+        if (p.firingStep >= 4) {
+          p.firing = false;
+          p.row = 0;
+          p.frame = 0;
+        } else {
+          p.nextFrameTime = now + PLAYER_FIRE_FRAME_DURATION;
+        }
+      }
 
       // Update enemies
       let moveDown = false;
@@ -182,8 +217,24 @@ const App: React.FC = () => {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
       // Player
-      ctx.fillStyle = "blue";
-      ctx.fillRect(p.x, p.y, p.width, p.height);
+      if (imageLoaded) {
+        const sx = p.frame * PLAYER_SPRITE_SIZE;
+        const sy = p.row * PLAYER_SPRITE_SIZE;
+        ctx.drawImage(
+          playerImage,
+          sx,
+          sy,
+          PLAYER_SPRITE_SIZE,
+          PLAYER_SPRITE_SIZE,
+          p.x,
+          p.y,
+          PLAYER_SIZE,
+          PLAYER_SIZE
+        );
+      } else {
+        ctx.fillStyle = "blue";
+        ctx.fillRect(p.x, p.y, p.width, p.height);
+      }
 
       // Enemies (use image or fallback)
       enemies.current.forEach((e) => {
@@ -245,6 +296,12 @@ const App: React.FC = () => {
     direction.current = 1;
     score.current = 0;
     player.current.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
+    player.current.y = CANVAS_HEIGHT - 60;
+    player.current.frame = 0;
+    player.current.row = 0;
+    player.current.firing = false;
+    player.current.firingStep = 0;
+    player.current.nextFrameTime = 0;
   };
 
   return (
