@@ -16,20 +16,21 @@ const ENEMY_SIZE = 75;
 const BULLET_SIZE = 5;
 const BULLET_SPEED = 7;
 const PLAYER_SPEED = 5;
-const ENEMY_SPEED = 2;
+const ENEMY_SPEED_INITIAL = 2;
+const ENEMY_SPEED_INCREMENT = 0.5;
 
 const App: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const keys = useKeyboardControls();
 
   const [gameOver, setGameOver] = useState(false);
-  const [visibleScore, setVisibleScore] = useState(0);
 
   const bullets = useRef<Entity[]>([]);
   const enemies = useRef<Entity[]>(
     generateEnemies(5, 10, 60, 50, 50, 50, ENEMY_SIZE)
   );
   const direction = useRef<1 | -1>(1);
+  const enemySpeed = useRef(ENEMY_SPEED_INITIAL);
 
   const score = useRef(0);
 
@@ -82,7 +83,7 @@ const App: React.FC = () => {
       // Update enemies
       let moveDown = false;
       for (const e of enemies.current) {
-        const nextX = e.x + ENEMY_SPEED * direction.current;
+        const nextX = e.x + enemySpeed.current * direction.current;
         if (nextX + ENEMY_SIZE > CANVAS_WIDTH || nextX < 0) {
           moveDown = true;
           break;
@@ -98,7 +99,7 @@ const App: React.FC = () => {
       } else {
         enemies.current = enemies.current.map((e) => ({
           ...e,
-          x: e.x + ENEMY_SPEED * direction.current,
+          x: e.x + enemySpeed.current * direction.current,
         }));
       }
 
@@ -109,7 +110,6 @@ const App: React.FC = () => {
         bullets.current = bullets.current.filter((b) => {
           if (!hit && isColliding(b, enemy)) {
             score.current += 10;
-            setVisibleScore(score.current);
             hit = true;
             return false;
           }
@@ -118,6 +118,21 @@ const App: React.FC = () => {
         if (!hit) remainingEnemies.push(enemy);
       }
       enemies.current = remainingEnemies;
+
+      if (enemies.current.length === 0) {
+        enemySpeed.current += ENEMY_SPEED_INCREMENT;
+        enemies.current = generateEnemies(
+          5,
+          10,
+          60,
+          50,
+          50,
+          50,
+          ENEMY_SIZE
+        );
+        bullets.current = [];
+        direction.current = 1;
+      }
 
       // Game over check
       if (enemies.current.some((e) => e.y + e.height > p.y)) {
@@ -175,8 +190,9 @@ const App: React.FC = () => {
       50,
       ENEMY_SIZE
     );
+    enemySpeed.current = ENEMY_SPEED_INITIAL;
+    direction.current = 1;
     score.current = 0;
-    setVisibleScore(0);
     player.current.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
   };
 
