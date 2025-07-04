@@ -26,7 +26,9 @@ const App: React.FC = () => {
   const [visibleScore, setVisibleScore] = useState(0);
 
   const bullets = useRef<Entity[]>([]);
-  const enemies = useRef<Entity[]>(generateEnemies());
+  const enemies = useRef<Entity[]>(
+    generateEnemies(5, 10, 60, 50, 50, 50, ENEMY_SIZE)
+  );
   const direction = useRef<1 | -1>(1);
 
   const score = useRef(0);
@@ -164,7 +166,15 @@ const App: React.FC = () => {
   const handleRestart = () => {
     setGameOver(false);
     bullets.current = [];
-    enemies.current = generateEnemies();
+    enemies.current = generateEnemies(
+      5,
+      10,
+      60,
+      50,
+      50,
+      50,
+      ENEMY_SIZE
+    );
     score.current = 0;
     setVisibleScore(0);
     player.current.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
