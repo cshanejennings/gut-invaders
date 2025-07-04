@@ -42,6 +42,7 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
+    if (gameOver) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -176,7 +177,7 @@ const App: React.FC = () => {
     frameId = requestAnimationFrame(gameLoop);
 
     return () => cancelAnimationFrame(frameId);
-  }, [keys]);
+  }, [keys, gameOver]);
 
   const handleRestart = () => {
     setGameOver(false);
