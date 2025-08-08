@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Enemy, Entity } from '../types';
-import { generateEnemies } from '../utils/enemyFormation';
+import { generateEnemies, levelOneFormation } from '../utils/enemyFormation';
 import { isColliding } from '../utils/collision';
 
 export interface InvadersHandles {
@@ -20,7 +20,9 @@ const HIT_FRAME_DURATION = 60;
 const SPRITE_SIZE = 48;
 
 export const Invaders = forwardRef<InvadersHandles>((_, ref) => {
-  const enemies = useRef<Enemy[]>(generateEnemies(5, 10, 60, 50, 50, 50, ENEMY_SIZE));
+  const enemies = useRef<Enemy[]>(
+    generateEnemies(levelOneFormation, 10, 60, 50, 50, 50, ENEMY_SIZE),
+  );
   const direction = useRef<1 | -1>(1);
   const enemySpeed = useRef(ENEMY_SPEED_INITIAL);
   const score = useRef(0);
@@ -95,7 +97,15 @@ export const Invaders = forwardRef<InvadersHandles>((_, ref) => {
 
       if (enemies.current.length === 0) {
         enemySpeed.current += ENEMY_SPEED_INCREMENT;
-        enemies.current = generateEnemies(5, 10, 60, 50, 50, 50, ENEMY_SIZE);
+        enemies.current = generateEnemies(
+          levelOneFormation,
+          10,
+          60,
+          50,
+          50,
+          50,
+          ENEMY_SIZE,
+        );
         bullets.current = [];
         direction.current = 1;
       }
@@ -126,7 +136,15 @@ export const Invaders = forwardRef<InvadersHandles>((_, ref) => {
       });
     },
     reset() {
-      enemies.current = generateEnemies(5, 10, 60, 50, 50, 50, ENEMY_SIZE);
+      enemies.current = generateEnemies(
+        levelOneFormation,
+        10,
+        60,
+        50,
+        50,
+        50,
+        ENEMY_SIZE,
+      );
       enemySpeed.current = ENEMY_SPEED_INITIAL;
       direction.current = 1;
       score.current = 0;
